@@ -1,7 +1,7 @@
 server:
   port: 8080
+  address: 127.0.0.1
   servlet:
-
     context-path: /spike
 
 spring:
@@ -10,24 +10,30 @@ spring:
     url: jdbc:mysql://123.60.38.54:3306/mysql?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: 656803
-
     hikari:
-
       pool-name: DateHikariCP
-
       minimum-idle: 5
-
       idle-timeout: 180000
-
       maximum-pool-size: 10
-
       auto-commit: true
-
       max-lifetime: 1800000
-
       connection-timeout: 30000
-
       connection-test-query: SELECT 1
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: 15671381797@163.com #初始邮件地址（发送邮件者）
+    password: OVOEZUMHAXMIVNRD  #密码
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            socketFactory:
+              class: com.sun.mail.util.MailSSLSocketFactory
+              fallback: false
   #redis
   redis:
     host: 123.60.38.54
