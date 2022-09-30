@@ -1,0 +1,54 @@
+server:
+  port: 8080
+  servlet:
+
+    context-path: /spike
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://123.60.38.54:3306/mysql?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 656803
+
+    hikari:
+
+      pool-name: DateHikariCP
+
+      minimum-idle: 5
+
+      idle-timeout: 180000
+
+      maximum-pool-size: 10
+
+      auto-commit: true
+
+      max-lifetime: 1800000
+
+      connection-timeout: 30000
+
+      connection-test-query: SELECT 1
+  #redis
+  redis:
+    host: 123.60.38.54
+    port: 6379
+    timeout: 20000
+    pool:
+      max-active: 8
+      min-idle: 0
+      max-idle: 8
+      max-wait: -1
+    password: 656803
+
+
+
+logging:
+  level:
+    com.lzj.admin.mapper: debug
+
+  pattern:
+    console: '%d{2100-01-01 13:14:00.666} [%thread] %-5level %logger{50} - %msg%n'
+
+
+
+

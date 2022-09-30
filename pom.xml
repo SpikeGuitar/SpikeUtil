@@ -37,6 +37,21 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>hu.blackbelt.bundles.swagger-parser</groupId>
+            <artifactId>io.swagger.parser</artifactId>
+            <version>1.0.47_1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>1.1.2-beta5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.31</version>
+        </dependency>
     </dependencies>
 
     <build>
