@@ -110,11 +110,11 @@ public class UtilServiceImpl implements UtilService {
             List<Map<String, Object>> attachList = (List<Map<String, Object>>) map.get("attachList");
             log.info("Start Pack Accessories!");
             // "stream" put 需要放入压缩包的文件 比特数组
-            for (Map<String, Object> attach : attachList) {
+//            for (Map<String, Object> attach : attachList) {
 //                InputStream inputStream = fileStoreFacade.downloadFile(fileName);
 //                ByteArrayOutputStream out = reader(inputStream);
 //                attach.put("stream", out.toByteArray());
-            }
+//            }
             zipFiles(attachList,response);
             log.info("End Pack Accessories!");
         } else {
