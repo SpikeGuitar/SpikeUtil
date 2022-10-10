@@ -15,6 +15,7 @@ import javax.annotation.Resource;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -110,20 +111,28 @@ public class UtilServiceImpl implements UtilService {
             List<Map<String, Object>> attachList = (List<Map<String, Object>>) map.get("attachList");
             log.info("Start Pack Accessories!");
             // "stream" put 需要放入压缩包的文件 比特数组
-//            for (Map<String, Object> attach : attachList) {
-//                InputStream inputStream = fileStoreFacade.downloadFile(fileName);
-//                ByteArrayOutputStream out = reader(inputStream);
-//                attach.put("stream", out.toByteArray());
-//            }
-            zipFiles(attachList,response);
+            for (Map<String, Object> attach : attachList) {
+                //文件输入流
+                InputStream inputStream = new InputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        return 0;
+                    }
+                };
+                ByteArrayOutputStream out = reader(inputStream);
+                attach.put("stream", out.toByteArray());
+            }
+            //生成几级目录
+            String mkdir = (String) map.get("mkdir");
+            zipFiles(attachList, response, mkdir);
             log.info("End Pack Accessories!");
         } else {
             log.info("Params Erro!");
         }
     }
 
-    //多个文件压缩成压缩包并下载
-    public void zipFiles(List<Map<String, Object>> fileList, HttpServletResponse response) {
+    //多个文件 放入文件夹压缩成压缩包并下载
+    public void zipFiles(List<Map<String, Object>> fileList, HttpServletResponse response, String mkdir) {
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream())) {
             //下载压缩包
             response.setContentType("application/zip");
@@ -131,7 +140,15 @@ public class UtilServiceImpl implements UtilService {
             log.info("开始循环压缩");
             // 创建 ZipEntry 对象
             for (Map map : fileList) {
-                ZipEntry zipEntry = new ZipEntry((String) map.get("fileName"));
+                String fileName = map.get("fileName").toString();
+                if (mkdir.equals("3")) {
+                    String projectName = "自定义目录";
+                    fileName =projectName+ File.separator +map.get("fileType").toString() + File.separator + map.get("fileName").toString();
+                }
+                if (mkdir.equals("2")) {
+                    fileName = map.get("fileType").toString() + File.separator + map.get("fileName").toString();
+                }
+                ZipEntry zipEntry = new ZipEntry(fileName);
                 zipOutputStream.putNextEntry(zipEntry);
                 zipOutputStream.write((byte[]) map.get("stream"));
             }
