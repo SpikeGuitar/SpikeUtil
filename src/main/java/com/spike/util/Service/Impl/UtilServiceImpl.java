@@ -3,6 +3,8 @@ package com.spike.util.Service.Impl;
 import com.spike.util.Service.UtilService;
 import com.spike.util.UtilClass.ExcelUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -71,12 +73,20 @@ public class UtilServiceImpl implements UtilService {
             col = 0;
             for (String fileName : tableCode) {
                 String value = dataMap.get(fileName) != null ? dataMap.get(fileName).toString() : "";
-                row.createCell(col++).setCellValue(value);
+                if(!value.isEmpty()&&StringUtils.isNumeric(value)){
+                    row.createCell(col++).setCellType(CellType.NUMERIC);
+                    double dobValue= Double.valueOf(value);
+                    row.createCell(col++).setCellValue(dobValue);
+                }else {
+                    row.createCell(col++).setCellType(CellType.STRING);
+                    row.createCell(col++).setCellValue(value);
+                }
             }
             rowValue = rowValue + 1;
         }
         String fileName = "DFlow" + System.currentTimeMillis();
         excelTemplate.export(response, fileName);
+        return;
     }
 
     /**

@@ -3,17 +3,23 @@ package com.spike.util.Controller;
 import com.spike.util.Service.UtilService;
 import com.spike.util.UtilClass.ResponseResult;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/UtilController")
 public class UtilController {
@@ -153,6 +159,25 @@ public class UtilController {
 
     protected ResponseResult<Object> getErrResponseResult(String errMsg) {
         return ResponseResult.builder().errcode(0l).errmsg(errMsg).build();
+    }
+
+    @ApiOperation("allFileDownload")
+    @GetMapping("/allFileDownload")
+    public void allFileDownload(@RequestParam(value = "fileName") String fileName, @RequestParam(value = "filePath") String filePath) throws Exception {
+        String fileDir = getFileDir(filePath);
+        log.error("************************:  "+fileDir+fileName+" *******************************");
+        File newFile = new File(fileDir, fileName);
+        log.error("************************:  开始查找文件 *******************************");
+    }
+
+    public String getFileDir(String filePath) {
+        List<String> url = Arrays.asList(filePath.split("/"));
+        String path = "";
+        for(String str :url){
+            str = str+File.separator;
+            path = path+str;
+        }
+        return path;
     }
 
 }
