@@ -60,7 +60,7 @@ public class UtilServiceImpl implements UtilService {
             tempRow.createCell(col++).setCellValue(tableName);
         }
         //填充表内容
-        int rowValue = 0;
+        int rowValue = 1;
         //创建数据行
         if (map.get("data") == null || !(map.get("data") instanceof List)) {
             log.info("数据格式异常，导出失败！");
@@ -74,11 +74,11 @@ public class UtilServiceImpl implements UtilService {
             for (String fileName : tableCode) {
                 String value = dataMap.get(fileName) != null ? dataMap.get(fileName).toString() : "";
                 if(!value.isEmpty()&&StringUtils.isNumeric(value)){
-                    row.createCell(col++).setCellType(CellType.NUMERIC);
+                    row.createCell(col).setCellType(CellType.NUMERIC);
                     double dobValue= Double.valueOf(value);
                     row.createCell(col++).setCellValue(dobValue);
                 }else {
-                    row.createCell(col++).setCellType(CellType.STRING);
+                    row.createCell(col).setCellType(CellType.STRING);
                     row.createCell(col++).setCellValue(value);
                 }
             }
