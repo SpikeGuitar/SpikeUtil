@@ -1,9 +1,14 @@
 package com.spike.util.UtilClass;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
@@ -11,6 +16,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author zhengqiu
@@ -83,6 +94,7 @@ public class ExcelUtil {
             throw e;
         }
     }
+
     /**
      * excel 模板类
      */
@@ -106,7 +118,7 @@ public class ExcelUtil {
         /**
          * 导出excel
          *
-         * @param response 响应体
+         * @param response     响应体
          * @param newExcelName 自定义导出excel的文件名
          */
         public void export(HttpServletResponse response, String newExcelName) throws Exception {
@@ -136,6 +148,69 @@ public class ExcelUtil {
         public Workbook getWorkbook() {
             return workbook;
         }
+    }
+
+    public static Workbook getWorkBook(MultipartFile file) {
+        //获得文件名
+        String fileName = file.getOriginalFilename();
+        //创建Workbook工作薄对象，表示整个excel
+        Workbook workbook = null;
+        Sheet sheet = null;
+        try (InputStream is = file.getInputStream()) {
+            //根据文件后缀名不同(xls和xlsx)获得不同的Workbook实现类对象
+            if (fileName.endsWith("xls")) {
+                //2003
+                POIFSFileSystem poifsFileSystem = new POIFSFileSystem(is);
+                workbook = new HSSFWorkbook(poifsFileSystem);
+                sheet = workbook.getSheetAt(0);
+            } else if (fileName.endsWith("xlsx")) {
+                //2007 及2007以上
+                workbook = new XSSFWorkbook(is);
+                sheet = workbook.getSheetAt(0);
+            }
+        } catch (IOException e) {
+            log.info("", e);
+            e.printStackTrace();
+        }
+        return workbook;
+    }
+
+    public static String getValue(Cell cell) {
+        if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.BOOLEAN) {
+            return String.valueOf(cell.getBooleanCellValue());
+        } else if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
+            String value = "";
+            if (HSSFDateUtil.isCellDateFormatted(cell)) {
+                Date d = cell.getDateCellValue();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                value = sdf.format(d);
+            } else {
+                double temp = cell.getNumericCellValue();
+                //value = new BigDecimal(temp).toString();
+                value = String.valueOf(temp);
+            }
+            return value;
+        } else if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.STRING) {
+            return String.valueOf(cell.getStringCellValue());
+        } else {
+            return String.valueOf(cell.getStringCellValue());
+        }
+    }
+
+    public static List<Map<String, Object>> updateExcel(MultipartFile file) {
+        Workbook workbook = getWorkBook(file);//获取工作簿workbook
+        Sheet sheetAt = workbook.getSheetAt(0);//根据工作簿获取整张excel表的信息
+        List<Map<String, Object>> resultMap = new ArrayList<>();
+        for (int i = 1; i <= sheetAt.getLastRowNum(); i++) {//第一行是表头，所以不要，i从1开始
+            Map<String, Object> tempMap = new HashMap<>();
+            for (int j = 0; j < sheetAt.getRow(i).getLastCellNum(); j++) {//循环每一行
+                Cell cell = sheetAt.getRow(i).getCell(j);//获取每一个单元格的值
+                String value = getValue(cell);//把单元格的值转成字符串
+                tempMap.put(String.valueOf(j), value);
+            }
+            resultMap.add(tempMap);
+        }
+        return resultMap;
     }
 
 }
