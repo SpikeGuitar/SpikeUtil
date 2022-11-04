@@ -2,6 +2,8 @@ package com.spike.util.Service.Impl;
 
 import com.spike.util.Service.UtilService;
 import com.spike.util.UtilClass.ExcelUtil;
+import com.spike.util.entry.Person;
+import com.spike.util.ldapConfig.SsldapContextSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.CellType;
@@ -9,6 +11,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ldap.core.ContextSource;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -36,6 +42,18 @@ public class UtilServiceImpl implements UtilService {
 
     @Value("${spring.mail.username}")
     private String FROM;
+
+    @Value("${spring.ldap.urls:}")
+    private String LDAP_URLS;
+
+    @Value("${spring.ldap.username:}")
+    private String LDAP_USER_NAME;
+
+    @Value("${spring.ldap.password:}")
+    private String LDAP_PASSWORD;
+
+    @Value("${spring.ldap.base:}")
+    private String LDAP_BASE;
 
     @Resource
     private JavaMailSender javaMailSender;
@@ -139,6 +157,42 @@ public class UtilServiceImpl implements UtilService {
         } else {
             log.info("Params Erro!");
         }
+    }
+
+    public List<Person> findAll() {
+        List<Person> resultList = ldapTemplate().findAll(Person.class);
+        for (Person person : resultList) {
+            String[] obj = person.getObjectGUID().split(",");
+            log.info("开始转换 objectGuid :{}", obj);
+            String guidStr = Person.getGUID(obj);
+            log.info("objectGuid :{}", guidStr);
+            person.setObjectGUIDStr(guidStr);
+            log.info("objectGuid 转换结束");
+        }
+        log.info("ldap 查询成功!");
+        return resultList;
+    }
+
+    public LdapTemplate ldapTemplate() {
+        LdapTemplate ldapTemplate = new LdapTemplate(contextSource());
+        ldapTemplate.setIgnorePartialResultException(true);
+        return ldapTemplate;
+    }
+
+    public ContextSource contextSource() {
+        // ldaps使用自定义的支持SSL的Context配置
+        LdapContextSource contextSource = new SsldapContextSource();
+        contextSource.setUserDn(LDAP_USER_NAME);
+        contextSource.setPassword(LDAP_PASSWORD);
+        contextSource.setUrl(LDAP_URLS);
+        contextSource.setBase(LDAP_BASE);
+        contextSource.setAnonymousReadOnly(false);
+        contextSource.setPooled(false);
+        contextSource.afterPropertiesSet();
+        final Map<String, Object> envProps = new HashMap<>();
+        envProps.put("java.naming.ldap.attributes.binary", "objectGUID");
+        contextSource.setBaseEnvironmentProperties(envProps);
+        return contextSource;
     }
 
     //多个文件 放入文件夹压缩成压缩包并下载

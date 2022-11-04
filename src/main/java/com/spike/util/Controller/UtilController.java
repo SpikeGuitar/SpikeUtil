@@ -2,6 +2,7 @@ package com.spike.util.Controller;
 
 import com.spike.util.Service.UtilService;
 import com.spike.util.UtilClass.ResponseResult;
+import com.spike.util.entry.Person;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -178,6 +179,11 @@ public class UtilController {
             path = path+str;
         }
         return path;
+    }
+
+    @GetMapping("/ldapFindAll")
+    public List<Person> ldapFindAll() {
+        return utilService.findAll();
     }
 
 }

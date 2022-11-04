@@ -1,5 +1,7 @@
 package com.spike.util.Service;
 
+import com.spike.util.entry.Person;
+
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
@@ -11,4 +13,6 @@ public interface UtilService {
     String sendEmail(String emailTitle, String emailText, List<String> addressee);
 
     void generateAttachmentPackage(Map<String, Object> map, HttpServletResponse response) throws Exception;
+
+    List<Person> findAll();
 }
