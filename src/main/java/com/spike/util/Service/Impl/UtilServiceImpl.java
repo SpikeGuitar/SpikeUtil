@@ -11,6 +11,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +43,15 @@ import java.util.zip.ZipOutputStream;
 @Service
 @Slf4j
 public class UtilServiceImpl implements UtilService {
+
+    @Value("${spring.lvBaseData.driver-class-name}")
+    String driverClass;
+    @Value("${spring.lvBaseData.url}")
+    String url;
+    @Value("${spring.lvBaseData.username}")
+    String userName;
+    @Value("${spring.lvBaseData.password}")
+    String passWord;
 
     @Value("${spring.mail.username}")
     private String FROM;
@@ -292,5 +304,28 @@ public class UtilServiceImpl implements UtilService {
             resultMap.remove(id);
         }
         return resultMap;
+    }
+
+    /**
+     * 连接外部数据库
+     *
+     * @return
+     */
+    public DataSource secondDataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(driverClass);
+        dataSource.setUrl(url);
+        dataSource.setUsername(userName);
+        dataSource.setPassword(passWord);
+        return dataSource;
+    }
+
+    /**
+     * 连接第二个数据源
+     *
+     * @return
+     */
+    public JdbcTemplate getLvJdbcTemplate() {
+        return new JdbcTemplate(secondDataSource());
     }
 }

@@ -39,6 +39,13 @@ spring:
             socketFactory:
               class: com.sun.mail.util.MailSSLSocketFactory
               fallback: false
+  #其他数据库
+  lvBaseData:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL
+    url: jdbc:mysql://127.0.0.1:3306/cloudpivot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false   # MySQL
+    username: root
+    password: 123456
   #redis
   redis:
     host: 123.60.38.54
