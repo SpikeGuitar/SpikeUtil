@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -240,5 +241,56 @@ public class UtilServiceImpl implements UtilService {
             org.apache.commons.compress.utils.IOUtils.closeQuietly(input);
         }
         return byteArrayOutputStream;
+    }
+
+    /**
+     * List数组 生成树形结构
+     * @param list
+     * @return
+     */
+    @Override
+    public Map<String, Object> getTreeMap(List<Map<String, Object>> list) {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        for (Map<String, Object> entity : list) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("isNode", entity.get("isNode"));
+            map.put("id", entity.get("id"));
+            map.put("nodeId", entity.get("nodeId"));
+            map.put("nodeParentId", entity.get("nodeParentId"));
+            map.put("sortNum", entity.get("sortNum"));
+            map.put("projectName", entity.get("projectName"));
+            resultMap.put("nodeId", map);
+            mapList.add(resultMap);
+        }
+        resultMap = getTreeMap(mapList, resultMap);
+        return resultMap;
+    }
+
+    public Map<String, Object> getTreeMap(List<Map<String, Object>> mapList,Map<String, Object> resultMap){
+        List<String> idList = new ArrayList<>();
+        for (Map map : mapList) {
+            //获取父id
+            String parentId = map.get("nodeParentId").toString();
+            if (resultMap.get(parentId) != null) {
+                //获取父节点
+                Map<String, Object> parentMap = (Map<String, Object>) resultMap.get(parentId);
+                //获取父节点的子节点
+                List<Map<String, Object>> childrenList;
+                if (parentMap.get("children") != null) {
+                    childrenList = (List<Map<String, Object>>) parentMap.get("children");
+                } else {
+                    childrenList = new ArrayList<>();
+                }
+                //将当前的对象添加到父对象的children中
+                childrenList.add(map);
+                parentMap.put("children", childrenList);
+                idList.add(map.get("id") != null ? map.get("id").toString() : "");
+            }
+        }
+        for (String id : idList) {
+            resultMap.remove(id);
+        }
+        return resultMap;
     }
 }

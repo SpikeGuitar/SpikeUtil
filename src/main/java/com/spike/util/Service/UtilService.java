@@ -15,4 +15,6 @@ public interface UtilService {
     void generateAttachmentPackage(Map<String, Object> map, HttpServletResponse response) throws Exception;
 
     List<Person> findAll();
+
+    public Map<String, Object> getTreeMap(List<Map<String, Object>> list);
 }
