@@ -25,10 +25,10 @@ spring:
     password: #xxx
     base: #DC=xx,DC=xx,DC=xxx
   mail:
-    host: smtp.163.com
+    host: smtp.qq.com
     port: 465
-    username: 15671381797@163.com #初始邮件地址（发送邮件者）
-    password: OVOEZUMHAXMIVNRD  #密码
+    username: 2926169741@qq.com #初始邮件地址（发送邮件者）
+    password: ouiejfkeeypndccd  #密码
     protocol: smtp
     properties:
       mail:
