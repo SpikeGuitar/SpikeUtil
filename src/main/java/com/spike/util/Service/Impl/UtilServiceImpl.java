@@ -43,6 +43,8 @@ import java.util.zip.ZipOutputStream;
 @Service
 @Slf4j
 public class UtilServiceImpl implements UtilService {
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
     @Value("${spring.lvBaseData.driver-class-name}")
     String driverClass;
@@ -277,6 +279,11 @@ public class UtilServiceImpl implements UtilService {
         }
         resultMap = getTreeMap(mapList, resultMap);
         return resultMap;
+    }
+
+    @Override
+    public void updateDDL(String sql) {
+        jdbcTemplate.execute(sql);
     }
 
     public Map<String, Object> getTreeMap(List<Map<String, Object>> mapList,Map<String, Object> resultMap){

@@ -17,4 +17,6 @@ public interface UtilService {
     List<Person> findAll();
 
     public Map<String, Object> getTreeMap(List<Map<String, Object>> list);
+
+    void updateDDL(String sql);
 }

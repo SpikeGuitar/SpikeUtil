@@ -5,7 +5,6 @@ import com.spike.util.UtilClass.ResponseResult;
 import com.spike.util.entry.Person;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,9 +24,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/UtilController")
 public class UtilController {
-
-    @Resource
-    private JdbcTemplate jdbcTemplate;
 
     public static final String SUCCESS = "操作成功!";
 
@@ -192,7 +188,7 @@ public class UtilController {
 
     @GetMapping("/updateDDL")
     public ResponseResult<Object> updateDDL(@RequestParam(value = "sql") String sql) {
-        jdbcTemplate.execute(sql);
+        utilService.updateDDL(sql);
         return getErrResponseResult(SUCCESS);
     }
 
