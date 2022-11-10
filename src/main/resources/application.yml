@@ -11,19 +11,20 @@ spring:
     username: root
     password: 656803
     hikari:
-      pool-name: DateHikariCP
-      minimum-idle: 5
-      idle-timeout: 180000
-      maximum-pool-size: 10
-      auto-commit: true
-      max-lifetime: 1800000
-      connection-timeout: 30000
-      connection-test-query: SELECT 1
+      maximum-pool-size: 10                                     # 连接池最大连接数. 根据系统并发用户数设置合理值
+      minimum-idle: 1
+  #其他数据库
+  lvBaseData:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL
+    url: jdbc:mysql://127.0.0.1:3306/cloudpivot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false   # MySQL
+    username: root
+    password: 123456
   ldap:
-    urls: #ldaps://xxx.xxx.com:636
-    username: #CN=xx,OU=xx,OU=ITSSC,OU=xx,OU=AdminUnits,DC=xx,DC=xx,DC=com
-    password: #xxx
-    base: #DC=xx,DC=xx,DC=xxx
+    urls: ldaps://xxx.xxx.com:636
+    username: CN=xx,OU=xx,OU=ITSSC,OU=xx,OU=AdminUnits,DC=xx,DC=xx,DC=com
+    password: xxx
+    base: DC=xx,DC=xx,DC=xxx
   mail:
     host: smtp.qq.com
     port: 465
@@ -39,13 +40,6 @@ spring:
             socketFactory:
               class: com.sun.mail.util.MailSSLSocketFactory
               fallback: false
-  #其他数据库
-  lvBaseData:
-    type: com.zaxxer.hikari.HikariDataSource
-    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL
-    url: jdbc:mysql://127.0.0.1:3306/cloudpivot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false   # MySQL
-    username: root
-    password: 123456
   #redis
   redis:
     host: 123.60.38.54
