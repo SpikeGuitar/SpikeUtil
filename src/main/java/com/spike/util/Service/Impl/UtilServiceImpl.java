@@ -73,6 +73,9 @@ public class UtilServiceImpl implements UtilService {
     @Resource
     private JavaMailSender javaMailSender;
 
+    //Positive integer regular expression
+    public static final String POSITIVE_INT = "[1-9][0-9]*([.]0)?";
+
     public void exportExcel(String execlTempleName, Map<String, Object> map, HttpServletResponse response) throws Exception {
         ExcelUtil.ExcelTemplate excelTemplate = ExcelUtil.ExcelTemplate.init(execlTempleName + ".xlsx");
         Workbook workbook = excelTemplate.getWorkbook();
@@ -334,5 +337,20 @@ public class UtilServiceImpl implements UtilService {
      */
     public JdbcTemplate getLvJdbcTemplate() {
         return new JdbcTemplate(secondDataSource());
+    }
+
+    /**
+     * Batch check regular expression
+     */
+    public String batchCheckRegular(String err,Map<String,Object> map,String regular,String msg){
+        for( Map.Entry<String,Object> entry :map.entrySet()){
+            Object value = entry.getValue();
+            String key = entry.getKey();
+            boolean checkFlag = value != null && !Pattern.matches(regular, value.toString());
+            if (checkFlag) {
+                err += key+msg+";";
+            }
+        }
+        return err;
     }
 }
