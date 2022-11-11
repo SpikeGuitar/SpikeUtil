@@ -353,4 +353,23 @@ public class UtilServiceImpl implements UtilService {
         }
         return err;
     }
+
+    /**
+     *Null value verification
+     *
+     * @param err
+     * @param map
+     * @param start
+     * @param end
+     * @return
+     */
+    private String checkField(String err, Map<String, Object> map, char start, char end) {
+        for (char c = start; c <= end; c++) {
+            String letter = String.valueOf(c);
+            if (map.get(letter) == null || map.get(letter) != null && map.get(letter).toString().isEmpty()) {
+                err += letter + "列为必填项;";
+            }
+        }
+        return err;
+    }
 }
