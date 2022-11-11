@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -339,8 +340,22 @@ public class UtilServiceImpl implements UtilService {
         return new JdbcTemplate(secondDataSource());
     }
 
+//      boolean regexIJ = Pattern.matches("在XX单位下保存至XX之后销毁", letterH.toString()); 正则表达式匹配
+
     /**
      * Batch check regular expression
+     *
+     *         Map<String,Object> checkIntegerMap = new HashMap<>();
+     *         checkIntegerMap.put("A",letterA);
+     *         checkIntegerMap.put("C",letterC);
+     *         checkIntegerMap.put("D",letterD);
+     *         err = batchCheckPositiveInteger(err,checkIntegerMap,POSITIVE_INT,"列请填入正整数");
+     *
+     * @param err
+     * @param map
+     * @param regular
+     * @param msg
+     * @return
      */
     public String batchCheckRegular(String err,Map<String,Object> map,String regular,String msg){
         for( Map.Entry<String,Object> entry :map.entrySet()){
@@ -357,6 +372,8 @@ public class UtilServiceImpl implements UtilService {
     /**
      *Null value verification
      *
+     *err = checkField(err, map, 'A', 'F');
+     *
      * @param err
      * @param map
      * @param start
@@ -369,6 +386,26 @@ public class UtilServiceImpl implements UtilService {
             if (map.get(letter) == null || map.get(letter) != null && map.get(letter).toString().isEmpty()) {
                 err += letter + "列为必填项;";
             }
+        }
+        return err;
+    }
+
+    /**
+     * Check the specified enumeration
+     *
+     * String[] listE = {"诊断性生物标志物", "监测性生物标志物", "药效性/反应生物标志物", "预测性生物标志物", "预后生物标志物", "安全性生物标志物","易感性/风险生物标志物"};
+     * err = checkEnum(listE, map.get("E"), err, "E");
+     *
+     * @param list
+     * @param letter
+     * @param err
+     * @param colStr
+     * @return
+     */
+    private String checkEnum(String[] list, Object letter, String err, String colStr) {
+        List<String> arr = Arrays.asList(list);
+        if (!arr.contains(letter)) {
+            err += colStr + "列请在下拉框中指定的选项中选择;";
         }
         return err;
     }
