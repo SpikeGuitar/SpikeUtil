@@ -5,7 +5,6 @@ import com.spike.util.UtilClass.ExcelUtil;
 import com.spike.util.entry.Person;
 import com.spike.util.ldapConfig.SsldapContextSource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -34,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -106,7 +106,7 @@ public class UtilServiceImpl implements UtilService {
             col = 0;
             for (String fileName : tableCode) {
                 String value = dataMap.get(fileName) != null ? dataMap.get(fileName).toString() : "";
-                if(!value.isEmpty()&&StringUtils.isNumeric(value)){
+                if(!value.isEmpty()&& Pattern.matches("[-]?[0-9]*[.]?[0-9]*",value)){
                     row.createCell(col).setCellType(CellType.NUMERIC);
                     double dobValue= Double.valueOf(value);
                     row.createCell(col++).setCellValue(dobValue);
