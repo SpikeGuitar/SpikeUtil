@@ -18,10 +18,12 @@ import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @author zhengqiu
@@ -150,6 +152,12 @@ public class ExcelUtil {
         }
     }
 
+    /**
+     * 获取工作簿workbook
+     *
+     * @param file
+     * @return
+     */
     public static Workbook getWorkBook(MultipartFile file) {
         //获得文件名
         String fileName = file.getOriginalFilename();
@@ -175,6 +183,12 @@ public class ExcelUtil {
         return workbook;
     }
 
+    /**
+     * 获取单元格的值
+     *
+     * @param cell
+     * @return
+     */
     public static String getValue(Cell cell) {
         if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.BOOLEAN) {
             return String.valueOf(cell.getBooleanCellValue());
@@ -197,6 +211,12 @@ public class ExcelUtil {
         }
     }
 
+    /**
+     * 将 execl 文件转成List<Map<String, Object>>
+     *
+     * @param file
+     * @return
+     */
     public static List<Map<String, Object>> updateExcel(MultipartFile file) {
         Workbook workbook = getWorkBook(file);//获取工作簿workbook
         Sheet sheetAt = workbook.getSheetAt(0);//根据工作簿获取整张excel表的信息
@@ -211,6 +231,76 @@ public class ExcelUtil {
             resultMap.add(tempMap);
         }
         return resultMap;
+    }
+
+    //      boolean regexIJ = Pattern.matches("在XX单位下保存至XX之后销毁", letterH.toString()); 正则表达式匹配
+
+    /**
+     * Batch check regular expression
+     *
+     *         Map<String,Object> checkIntegerMap = new HashMap<>();
+     *         checkIntegerMap.put("A",letterA);
+     *         checkIntegerMap.put("C",letterC);
+     *         checkIntegerMap.put("D",letterD);
+     *         err = batchCheckPositiveInteger(err,checkIntegerMap,POSITIVE_INT,"列请填入正整数");
+     *
+     * @param err
+     * @param map
+     * @param regular
+     * @param msg
+     * @return
+     */
+    public static String batchCheckRegular(String err,Map<String,Object> map,String regular,String msg){
+        for( Map.Entry<String,Object> entry :map.entrySet()){
+            Object value = entry.getValue();
+            String key = entry.getKey();
+            boolean checkFlag = value != null && !Pattern.matches(regular, value.toString());
+            if (checkFlag) {
+                err += key+msg+";";
+            }
+        }
+        return err;
+    }
+
+    /**
+     *Null value verification
+     *
+     *err = checkField(err, map, 'A', 'F');
+     *
+     * @param err
+     * @param map
+     * @param start
+     * @param end
+     * @return
+     */
+    public static String checkField(String err, Map<String, Object> map, char start, char end) {
+        for (char c = start; c <= end; c++) {
+            String letter = String.valueOf(c);
+            if (map.get(letter) == null || map.get(letter) != null && map.get(letter).toString().isEmpty()) {
+                err += letter + "列为必填项;";
+            }
+        }
+        return err;
+    }
+
+    /**
+     * Check the specified enumeration
+     *
+     * String[] listE = {"诊断性生物标志物", "监测性生物标志物", "药效性/反应生物标志物", "预测性生物标志物", "预后生物标志物", "安全性生物标志物","易感性/风险生物标志物"};
+     * err = checkEnum(listE, map.get("E"), err, "E");
+     *
+     * @param list
+     * @param letter
+     * @param err
+     * @param colStr
+     * @return
+     */
+    public static String checkEnum(String[] list, Object letter, String err, String colStr) {
+        List<String> arr = Arrays.asList(list);
+        if (!arr.contains(letter)) {
+            err += colStr + "列请在下拉框中指定的选项中选择;";
+        }
+        return err;
     }
 
 }

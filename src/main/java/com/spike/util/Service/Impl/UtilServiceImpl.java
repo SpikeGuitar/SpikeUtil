@@ -18,6 +18,7 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.mail.internet.MimeMessage;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +38,10 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-
+import static com.spike.util.UtilClass.ExcelUtil.batchCheckRegular;
+import static com.spike.util.UtilClass.ExcelUtil.checkEnum;
+import static com.spike.util.UtilClass.ExcelUtil.checkField;
+import static com.spike.util.UtilClass.ExcelUtil.updateExcel;
 
 
 @Service
@@ -46,6 +49,8 @@ import java.util.zip.ZipOutputStream;
 public class UtilServiceImpl implements UtilService {
     @Resource
     private JdbcTemplate jdbcTemplate;
+
+    private static String ANCHOR_POINT = "第.*行导入校验错误,错误信息为：";
 
     @Value("${spring.lvBaseData.driver-class-name}")
     String driverClass;
@@ -75,7 +80,17 @@ public class UtilServiceImpl implements UtilService {
     private JavaMailSender javaMailSender;
 
     //Positive integer regular expression
+    public static final String SCHEME_NO = "schemeNo";
+
+    public static final String REMARK_NO = "remarkNo";
+
+    //check integer
     public static final String POSITIVE_INT = "[1-9][0-9]*([.]0)?";
+
+    public static final String BIG_THAN_ZERO = "^(?!(0[0-9]{0,}$))[0-9]{1,}[.]{0,}[0-9]{0,}$";
+
+    //Integer greater than or equal to 0
+    public static final String INTEGER_BIG_THAN_ZERO = "[0-9]*([.]0)?";
 
     public void exportExcel(String execlTempleName, Map<String, Object> map, HttpServletResponse response) throws Exception {
         ExcelUtil.ExcelTemplate excelTemplate = ExcelUtil.ExcelTemplate.init(execlTempleName + ".xlsx");
@@ -340,73 +355,163 @@ public class UtilServiceImpl implements UtilService {
         return new JdbcTemplate(secondDataSource());
     }
 
-//      boolean regexIJ = Pattern.matches("在XX单位下保存至XX之后销毁", letterH.toString()); 正则表达式匹配
+    @Override
+    public List<Map<String, Object>> getUpdateExcel(MultipartFile file){
+        return updateExcel(file);
+    }
+
+    @Override
+    public List<String> generalImport(String tableCode, MultipartFile file, String userId, String schemeNo, String remarkNo, String type, String informationType) {
+        List<String> msgList = new ArrayList<>();
+        // 通过execl返回对象数组
+        List<Map<String, Object>> dataList = updateExcel(file);
+        // 临时存储保存对象数组
+        List<Map<String, Object>> saveList = new ArrayList<>();
+        String schemaCode = tableCode;
+        int row = 2;
+        for (Map<String, Object> map : dataList) {
+            String err = "第" + row + "行导入校验错误,错误信息为：";
+            // 表-批量导入模板 示例
+            if ("test".equals(tableCode)) {
+                err = checkHumanGeneticMaterial(err, map, saveList, schemeNo, remarkNo);
+            }
+            // string verification
+            boolean changeFlag = Pattern.matches(ANCHOR_POINT, err);
+            if (!changeFlag) {
+                msgList.add(err);
+            }
+            row++;
+        }
+        if (msgList.isEmpty()) {
+            for (Map<String, Object> saveMap : saveList) {
+                // 保存对象
+                saveObj(saveMap, schemaCode, userId);
+            }
+        }
+        return msgList;
+    }
 
     /**
-     * Batch check regular expression
-     *
-     *         Map<String,Object> checkIntegerMap = new HashMap<>();
-     *         checkIntegerMap.put("A",letterA);
-     *         checkIntegerMap.put("C",letterC);
-     *         checkIntegerMap.put("D",letterD);
-     *         err = batchCheckPositiveInteger(err,checkIntegerMap,POSITIVE_INT,"列请填入正整数");
-     *
+     * 导入校验列子
      * @param err
      * @param map
-     * @param regular
-     * @param msg
+     * @param saveList
+     * @param schemeNo
+     * @param remarkNo
      * @return
      */
-    public String batchCheckRegular(String err,Map<String,Object> map,String regular,String msg){
-        for( Map.Entry<String,Object> entry :map.entrySet()){
-            Object value = entry.getValue();
-            String key = entry.getKey();
-            boolean checkFlag = value != null && !Pattern.matches(regular, value.toString());
-            if (checkFlag) {
-                err += key+msg+";";
+    private String checkHumanGeneticMaterial(String err, Map<String, Object> map, List<Map<String, Object>> saveList, String schemeNo, String remarkNo) {
+        Map<String, Object> saveMap = new HashMap<>();
+        //required field check
+        err = checkField(err, map, 'A', 'A');
+        err = checkField(err, map, 'C', 'I');
+        //column required field
+        Object letterA = map.get("A");
+        Object letterB = map.get("B");
+        Object letterC = map.get("C");
+        Object letterD = map.get("D");
+        Object letterF = map.get("F");
+        Object letterG = map.get("G");
+        Object letterI = map.get("I");
+        //check enum
+        String[] listA = {"全血", "血清", "血浆", "尿液", "粪便", "血细胞", "脑脊液", "骨髓", "骨髓涂片", "血涂片", "组织切片", "其他样本"};
+        err = checkEnum(listA, letterA, err, "A");
+        String[] listG = {"重要遗传家系", "特定地区人类遗传资源", "科技部规定种类、数量的人类遗传资源"};
+        err = checkEnum(listG, letterG, err, "G");
+        String[] listI = {"检测后立即销毁", "在XX单位下保存至XX之后销毁", "返样至XX单位", "其他"};
+        err = checkEnum(listI, letterI, err, "I");
+        // other check
+        boolean regexAB = letterA != null && Pattern.matches("其他样本", letterA.toString());
+        if (regexAB && letterB == null) {
+            err += "“人类遗传资源名称”列选择“其他样本”时，B列必填";
+        }
+        if (regexAB && letterB != null) {
+            saveMap.put("other", letterB);
+        }
+        Map<String, Object> checkIntegerMap = new HashMap<>();
+        checkIntegerMap.put("C", letterC);
+        checkIntegerMap.put("D", letterD);
+        err = batchCheckRegular(err, checkIntegerMap, POSITIVE_INT, "列请填入正整数");
+        checkIntegerMap.clear();
+        checkIntegerMap.put("", letterF);
+        err = batchCheckRegular(err, checkIntegerMap, BIG_THAN_ZERO, "“单位规格”列请填入大于等于0的数字");
+        boolean regexA = letterA != null && letterF != null && Pattern.matches("骨髓涂片|血涂片|组织切片", letterA.toString()) && !Pattern.matches(".*/*.*/*.*", letterF.toString());
+        if (regexA) {
+            err = "当“人类遗传资源名称”列选择“骨髓涂片/血涂片/组织切片”时，请按照XX*XX*XX格式输入;";
+        }
+        Object letterH = map.get("H");
+        boolean bRequiredField = letterA != null && letterA.toString().equals("其他样本");
+        if (bRequiredField) {
+            saveMap.put("other", letterB);
+        }
+        if (bRequiredField && letterB == null) {
+            err += " “人类遗传资源名称”列选择“其他样本”时，B列必填;";
+        }
+        if (letterI == null) {
+            return err;
+        }
+        Object letterJ = map.get("J");
+        Object letterK = map.get("K");
+        Map<String, Object> companyMap = new HashMap<>();
+        List<String> companyList = new ArrayList<>();
+        boolean regexI = Pattern.matches("在XX单位下保存至XX之后销毁", letterI.toString());
+        if (regexI && letterJ != null && letterK != null) {
+            boolean regexCompanyL = !companyList.contains(letterJ);
+            if (regexCompanyL) {
+                err += "J列请填写“一、基本信息表/参与采集单位信息”模块的单位全称;";
+            } else {
+                String value = "在" + companyMap.get(letterJ) + "单位下保存至" + letterK + "之后销毁";
+                saveMap.put("disposalPlan", value);
             }
+        }
+        if (regexI && (letterJ == null || letterK == null)) {
+            err += " “处置方案”列选择“在XX单位下保存至XX之后销毁”时，J、K列必填;";
+        }
+        Object letterL = map.get("L");
+        boolean regexL = Pattern.matches("返样至XX单位", letterI.toString());
+        if (regexL && letterL != null) {
+            boolean regexCompanyL = !companyList.contains(letterL);
+            if (regexCompanyL) {
+                err = "L列请填写“一、基本信息表/参与采集单位信息”模块的单位全称;";
+            } else {
+                saveMap.put("disposalPlan", companyMap.get(letterL));
+            }
+        }
+        if (regexL && letterL == null) {
+            err += " “处置方案”列选择“返样至XX单位”时，L列必填;";
+        }
+        Object letterM = map.get("M");
+        boolean mRequiredField = letterI.toString().equals("其他");
+        if (mRequiredField) {
+            saveMap.put("disposalPlan", letterM);
+        }
+        if (mRequiredField && letterM == null) {
+            err += " “处置方案”列选择“其他”时，M列必填;";
+        }
+        boolean changeFlag = Pattern.matches(ANCHOR_POINT, err);
+        if (changeFlag) {
+            saveMap.put(SCHEME_NO, schemeNo);
+            saveMap.put(REMARK_NO, remarkNo);
+            saveMap.put("nameOfHumanGeneticResour", letterA);
+            saveMap.put("numberOfSingleCases", letterC);
+            saveMap.put("numberOfCases", letterD);
+            saveMap.put("unitSpecification", letterF);
+            saveMap.put("sampleType", letterG);
+            saveMap.put("acquisitionUnit", letterH);
+            saveMap.put("disposalPlan", letterI);
+            saveMap.put("isActive", "0");
+            saveList.add(saveMap);
         }
         return err;
     }
 
-    /**
-     *Null value verification
-     *
-     *err = checkField(err, map, 'A', 'F');
-     *
-     * @param err
-     * @param map
-     * @param start
-     * @param end
-     * @return
-     */
-    private String checkField(String err, Map<String, Object> map, char start, char end) {
-        for (char c = start; c <= end; c++) {
-            String letter = String.valueOf(c);
-            if (map.get(letter) == null || map.get(letter) != null && map.get(letter).toString().isEmpty()) {
-                err += letter + "列为必填项;";
-            }
-        }
-        return err;
-    }
-
-    /**
-     * Check the specified enumeration
-     *
-     * String[] listE = {"诊断性生物标志物", "监测性生物标志物", "药效性/反应生物标志物", "预测性生物标志物", "预后生物标志物", "安全性生物标志物","易感性/风险生物标志物"};
-     * err = checkEnum(listE, map.get("E"), err, "E");
-     *
-     * @param list
-     * @param letter
-     * @param err
-     * @param colStr
-     * @return
-     */
-    private String checkEnum(String[] list, Object letter, String err, String colStr) {
-        List<String> arr = Arrays.asList(list);
-        if (!arr.contains(letter)) {
-            err += colStr + "列请在下拉框中指定的选项中选择;";
-        }
-        return err;
+    public void saveObj(Map<String, Object> map, String targetSchemaCode, String id) {
+        map.remove("modifier");
+        map.remove("ownerDeptId");
+        map.remove("owner");
+        map.remove("createDeptId");
+        map.remove("creater");
+        boolean flag = false;
+        // 自定义保存方法
     }
 }

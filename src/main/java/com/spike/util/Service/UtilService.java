@@ -1,6 +1,7 @@
 package com.spike.util.Service;
 
 import com.spike.util.entry.Person;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -19,4 +20,8 @@ public interface UtilService {
     public Map<String, Object> getTreeMap(List<Map<String, Object>> list);
 
     void updateDDL(String sql);
+
+    List<Map<String, Object>> getUpdateExcel(MultipartFile file);
+
+    List<String> generalImport(String schemaCode, MultipartFile file, String userId, String schemeNo, String remarkNo, String type, String informationType);
 }

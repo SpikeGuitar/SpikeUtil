@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.Arrays;
@@ -104,7 +106,7 @@ public class UtilController {
     @PostMapping("/exportExcel")
     public ResponseResult<Object> exportExcel(@RequestBody Map<String, Object> resMap, HttpServletResponse response) throws Exception {
         utilService.exportExcel("excelTemplate",resMap,response);
-        return this.getErrResponseResult(SUCCESS);
+        return this.getResponseResult(SUCCESS);
     }
 
     /**
@@ -128,7 +130,7 @@ public class UtilController {
         List<String> addressee = (List<String>) map.get("addressee");
          utilService.sendEmail(emailTitle, emailText, addressee);
         //Operation success feedback
-        return this.getErrResponseResult(SUCCESS);
+        return this.getResponseResult(SUCCESS);
     }
 
     /**
@@ -155,11 +157,19 @@ public class UtilController {
     @PostMapping("/generateAttachmentPackage")
     public ResponseResult generateAttachmentPackage(@RequestBody Map<String, Object> resMap, HttpServletResponse response) throws Exception {
         utilService.generateAttachmentPackage(resMap,response);
-        return this.getErrResponseResult(SUCCESS);
+        return this.getResponseResult(SUCCESS);
     }
 
-    protected ResponseResult<Object> getErrResponseResult(String errMsg) {
+    protected ResponseResult<Object> getResponseResult(String errMsg) {
         return ResponseResult.builder().errcode(0l).errmsg(errMsg).build();
+    }
+
+    protected ResponseResult<Object> getResponseResult(Object object,String errMsg) {
+        return ResponseResult.builder().data(object).errcode(0l).errmsg(errMsg).build();
+    }
+
+    protected ResponseResult<Object> getErrResponseResult(Object object,long code,String errMsg) {
+        return ResponseResult.builder().data(object).errcode(code).errmsg(errMsg).build();
     }
 
     @ApiOperation("allFileDownload")
@@ -189,7 +199,61 @@ public class UtilController {
     @GetMapping("/updateDDL")
     public ResponseResult<Object> updateDDL(@RequestParam(value = "sql") String sql) {
         utilService.updateDDL(sql);
-        return getErrResponseResult(SUCCESS);
+        return getResponseResult(SUCCESS);
+    }
+
+
+    @ApiOperation("getUpdateExcel")
+    @PostMapping("/getUpdateExcel")
+    public ResponseResult<Object>  getUpdateExcel(@RequestParam MultipartFile file){
+        List<Map<String, Object>> listMap = utilService.getUpdateExcel(file);
+        return this.getResponseResult(listMap,SUCCESS);
+    }
+
+    /**
+     * 请求示例
+     *
+     * result风格 Post
+     * 数据传输格式  form-data
+     *
+     * 入参示例：
+     *
+     * file:
+     * schemaCode:schedule_human_geneti_info
+     * schemeNo:12bd59f2cfe74f319e0a179cf568a157
+     * remarkNo:qwer1234       //
+     * type: xxx //分类字段 必填 可为空
+     * informationType：xxx //分类字段  可为空
+     *
+     * @param schemaCode
+     * @param file
+     * @param schemeNo
+     * @param remarkNo
+     * @param type
+     * @param informationType
+     * @param request
+     * @return
+     */
+    @ApiOperation(value = "通用导入接口", httpMethod = "POST")
+    @PostMapping("/generalImport")
+    public ResponseResult<Object> generalImport(@RequestParam("schemaCode") String schemaCode, @RequestParam("file") MultipartFile file, @RequestParam("schemeNo") String schemeNo, @RequestParam("remarkNo") String remarkNo, @RequestParam("type") String type, @RequestParam("informationType") String informationType, HttpServletRequest request) {
+        if (schemaCode == null) {
+            return this.getErrResponseResult("SchemaCode Is Null!", -1l,SUCCESS);
+        }
+        if (file == null) {
+            return this.getErrResponseResult("File Is Null!", -1l,SUCCESS);
+        }
+        if (schemeNo == null) {
+            return this.getErrResponseResult("SchemeNo Is Null!",-1l, SUCCESS);
+        }
+        if (remarkNo == null) {
+            return this.getErrResponseResult("RemarkNo Is Null!", -1l,SUCCESS);
+        }
+        List<String> msgList = utilService.generalImport(schemaCode, file, "userId", schemeNo, remarkNo, type, informationType);
+        if(!msgList.isEmpty()){
+            return this.getErrResponseResult(msgList, -1l,SUCCESS);
+        }
+        return this.getResponseResult(msgList, SUCCESS);
     }
 
 }
