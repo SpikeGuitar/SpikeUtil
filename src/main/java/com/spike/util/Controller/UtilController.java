@@ -1,5 +1,6 @@
 package com.spike.util.Controller;
 
+import com.alibaba.fastjson.JSON;
 import com.spike.util.Service.UtilService;
 import com.spike.util.Util.QRCodeUtil;
 import com.spike.util.UtilClass.ResponseResult;
@@ -254,16 +255,27 @@ public class UtilController {
         return this.getResponseResult(msgList, SUCCESS);
     }
 
+    /**
+     *
+     * @param map
+     * @return
+     */
     @PostMapping("/getQRCode")
     public ResponseResult<Object> getWebQR(@RequestBody Map<String,Object> map) {
         String QRCodeMsgName = map.get("QRCodeMsgName").toString();
         String QRCodeName = map.get("QRCodeName").toString();
         String url = map.get("URL").toString();
         String dir = map.get("DIR").toString();
+        log.info("map：{}", JSON.toJSONString(map));
         BufferedImage image = QRCodeUtil.createImage("utf-8", url, 300, 300);
         QRCodeUtil.addUpFont(image, QRCodeMsgName);
         Date nowDate = new Date();
-        String path = dir+File.separator+QRCodeName+nowDate.getTime()+".jpg";
+        String path = dir+File.separator+QRCodeName;
+        if(map.get("isRandom")!=null){
+            path+=nowDate.getTime();
+        }
+        path+=".jpg";
+        log.info("文件路径：{}",path);
         try {
             File file = new File(path);
             if (!file.isDirectory()) {
