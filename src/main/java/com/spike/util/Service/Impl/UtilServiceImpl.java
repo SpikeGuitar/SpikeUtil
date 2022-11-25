@@ -35,7 +35,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -377,6 +379,8 @@ public class UtilServiceImpl implements UtilService {
     @Override
     public void fileDownload(String path, HttpServletResponse response) throws Exception {
         File file = new File(path);
+        String fileName = URLEncoder.encode(file.getName(), "UTF-8");
+        response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
         InputStream inputStream = new FileInputStream(file);
         OutputStream out = response.getOutputStream();
         ByteArrayOutputStream readOut = reader(inputStream);
@@ -567,5 +571,16 @@ public class UtilServiceImpl implements UtilService {
         map.remove("creater");
         boolean flag = false;
         // 自定义保存方法
+    }
+
+    public String getDownloadUrl(String fileName) throws UnknownHostException {
+        InetAddress address = InetAddress.getLocalHost();
+        System.out.println(address.getHostName());//主机名
+        System.out.println(address.getCanonicalHostName());//主机别名
+        System.out.println(address.getHostAddress());//获取IP地址
+        System.out.println("===============");
+        String downLoadUsl = FieldEnum.HTTP.getCode()+address.getHostAddress()+":"+PORT+CONTEXT_PATH+"/"+"UtilController/fileDownload?path="+fileName;
+        downLoadUsl = downLoadUsl.replace(File.separator,FieldEnum.GET_2F.getCode());
+        return downLoadUsl;
     }
 }

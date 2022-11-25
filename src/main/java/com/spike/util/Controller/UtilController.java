@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -252,6 +251,12 @@ public class UtilController {
         return this.getResponseResult(msgList, SUCCESS);
     }
 
+    /**
+     *
+     * @param path
+     * @param response
+     * @throws Exception
+     */
     @ApiOperation("fileDownload")
     @GetMapping("/fileDownload")
     public void fileDownload(@RequestParam(value = "path") String path, HttpServletResponse response) throws Exception {
@@ -281,9 +286,6 @@ public class UtilController {
     @ApiOperation("getQRCodePicture")
     @PostMapping("/getQRCodePicture")
     public ResponseResult<Object> getQRCodePicture(@RequestBody Map<String, Object> map, HttpServletResponse response) throws Exception {
-        String url = map.get(FieldEnum.QR_CODE_NAME.getCode()).toString();
-        String fileName = URLEncoder.encode(url, "UTF-8");
-        response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
         Map<String, Object> resultMap = utilService.getWebQR(map);
         if (resultMap.get(FieldEnum.IMG_PATH.getCode()) != null) {
             String path = resultMap.get(FieldEnum.IMG_PATH.getCode()).toString();
@@ -296,17 +298,28 @@ public class UtilController {
         }
     }
 
-    @ApiOperation(value = "通用导入接口", httpMethod = "POST")
+    /**
+     *
+     * @param URL
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    @ApiOperation(value = "文件上传接口", httpMethod = "POST")
     @PostMapping("/upFile")
     public ResponseResult<Object> upFile(@RequestParam("URL") String URL, @RequestParam("file") MultipartFile file) throws IOException {
+        if(URL.isEmpty()){
+            URL = File.separator+"root"+File.separator+"data"+File.separator+"project";
+        }
         File fileDir = new File(URL);
         if (!fileDir.isDirectory()) {
             fileDir.mkdirs();
         }
         String fileName =URL+File.separator+file.getOriginalFilename();
-        file.transferTo(new File(fileName));
-        return this.getResponseResult(null, SUCCESS);
+        File newFile = new File(fileName);
+        file.transferTo(newFile);
+        // 下载路径
+        String fullPath =utilService.getDownloadUrl(newFile.getAbsoluteFile().toString());
+        return this.getResponseResult(fullPath, SUCCESS);
     }
-
-
 }

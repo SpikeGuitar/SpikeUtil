@@ -23,6 +23,7 @@ public enum FieldEnum {
     QR_CODE_NAME("QRCodeName","二维码名称"),
     URL("URL","地址"),
     DIR("DIR","目录"),
+    GET_2F("%2F","Get请求分隔符"),
     SCHEMA_CODE("schemaCode","schemaCode");
 
     FieldEnum(String code, String desc) {

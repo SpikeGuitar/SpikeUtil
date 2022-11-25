@@ -4,6 +4,7 @@ import com.spike.util.entry.Person;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 
@@ -28,4 +29,6 @@ public interface UtilService {
     List<String> generalImport(String schemaCode, MultipartFile file, String userId, String schemeNo, String remarkNo, String type, String informationType);
 
     Map<String, Object> getWebQR(Map<String, Object> map);
+
+    String getDownloadUrl(String toString) throws UnknownHostException;
 }
