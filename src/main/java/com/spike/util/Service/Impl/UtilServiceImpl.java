@@ -575,12 +575,26 @@ public class UtilServiceImpl implements UtilService {
 
     public String getDownloadUrl(String fileName) throws UnknownHostException {
         InetAddress address = InetAddress.getLocalHost();
-        System.out.println(address.getHostName());//主机名
-        System.out.println(address.getCanonicalHostName());//主机别名
-        System.out.println(address.getHostAddress());//获取IP地址
-        System.out.println("===============");
         String downLoadUsl = FieldEnum.HTTP.getCode()+address.getHostAddress()+":"+PORT+CONTEXT_PATH+"/"+"UtilController/fileDownload?path="+fileName;
         downLoadUsl = downLoadUsl.replace(File.separator,FieldEnum.GET_2F.getCode());
+        downLoadUsl = downLoadUsl.replace("?",FieldEnum.GET_3F.getCode());
         return downLoadUsl;
+    }
+
+    @Override
+    public String upFile(String url, MultipartFile file) throws IOException {
+        if(url.isEmpty()){
+            url = File.separator+"root"+File.separator+"data"+File.separator+"project";
+        }
+        File fileDir = new File(url);
+        if (!fileDir.isDirectory()) {
+            fileDir.mkdirs();
+        }
+        String fileName =url+File.separator+file.getOriginalFilename();
+        File newFile = new File(fileName);
+        file.transferTo(newFile);
+        // 下载路径
+        String fullPath =getDownloadUrl(newFile.getAbsoluteFile().toString());
+        return fullPath;
     }
 }

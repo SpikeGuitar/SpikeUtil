@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -252,7 +253,6 @@ public class UtilController {
     }
 
     /**
-     *
      * @param path
      * @param response
      * @throws Exception
@@ -271,7 +271,7 @@ public class UtilController {
      */
     @ApiOperation("getQRCode")
     @PostMapping("/getQRCode")
-    public ResponseResult<Object> getWebQR(@RequestBody Map<String, Object> map){
+    public ResponseResult<Object> getWebQR(@RequestBody Map<String, Object> map) {
         Map<String, Object> resultMap = utilService.getWebQR(map);
         return this.getResponseResult(resultMap, SUCCESS);
     }
@@ -299,7 +299,6 @@ public class UtilController {
     }
 
     /**
-     *
      * @param URL
      * @param file
      * @return
@@ -308,18 +307,37 @@ public class UtilController {
     @ApiOperation(value = "文件上传接口", httpMethod = "POST")
     @PostMapping("/upFile")
     public ResponseResult<Object> upFile(@RequestParam("URL") String URL, @RequestParam("file") MultipartFile file) throws IOException {
-        if(URL.isEmpty()){
-            URL = File.separator+"root"+File.separator+"data"+File.separator+"project";
-        }
-        File fileDir = new File(URL);
-        if (!fileDir.isDirectory()) {
-            fileDir.mkdirs();
-        }
-        String fileName =URL+File.separator+file.getOriginalFilename();
-        File newFile = new File(fileName);
-        file.transferTo(newFile);
-        // 下载路径
-        String fullPath =utilService.getDownloadUrl(newFile.getAbsoluteFile().toString());
+        String fullPath = utilService.upFile(URL, file);
         return this.getResponseResult(fullPath, SUCCESS);
+    }
+
+    /**
+     * Upload the file and generate the corresponding QR code
+     *
+     * @param DIR
+     * @param QRCodeName
+     * @param QRCodeMsgName
+     * @param file
+     * @param response
+     * @return
+     * @throws Exception
+     */
+    @ApiOperation("Upload the file and generate the corresponding QR code")
+    @PostMapping("/UploadFileGetQRCode")
+    public void UploadFileGetQRCode(@RequestParam("DIR") String DIR,@RequestParam("QRCodeName") String QRCodeName,@RequestParam("QRCodeMsgName") String QRCodeMsgName, @RequestParam("file") MultipartFile file, HttpServletResponse response) throws Exception {
+        // Upload the file
+        String fullPath = utilService.upFile(DIR, file);
+        // generate the corresponding QR code
+        Map<String, Object> map = new HashMap<>();
+        map.put(FieldEnum.URL.getCode(),fullPath);
+        if(DIR.isEmpty()){
+            DIR = File.separator+"root"+File.separator+"data"+File.separator+"project";
+        }
+        map.put(FieldEnum.DIR.getCode(),DIR);
+        map.put(FieldEnum.QR_CODE_NAME.getCode(),QRCodeName);
+        map.put(FieldEnum.QR_CODE_MSG.getCode(),QRCodeMsgName);
+        Map<String, Object> resultMap = utilService.getWebQR(map);
+        String path = resultMap.get(FieldEnum.IMG_PATH.getCode()).toString();
+        utilService.fileDownload(path, response);
     }
 }

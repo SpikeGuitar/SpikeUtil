@@ -33,21 +33,21 @@ import java.util.Hashtable;
 public class QRCodeUtil {
     /**
      * 创建二维码
-     * @param charSet 编码方式
-     * @param content 二维码内容
-     * @param qrWidth 二维码长度
+     *
+     * @param charSet  编码方式
+     * @param content  二维码内容
+     * @param qrWidth  二维码长度
      * @param qrHeight 二维码高度
      * @return
      */
-    public static BufferedImage createImage(String charSet, String content, int qrWidth, int qrHeight){
+    public static BufferedImage createImage(String charSet, String content, int qrWidth, int qrHeight) {
         Hashtable hints = new Hashtable();
         hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
         hints.put(EncodeHintType.CHARACTER_SET, charSet);
-        hints.put( EncodeHintType.MARGIN, 1);
+        hints.put(EncodeHintType.MARGIN, 1);
         BitMatrix bitMatrix = null;
         try {
-            bitMatrix = new MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE,qrWidth , qrHeight, // 修改二维码底部高度
-                    hints);
+            bitMatrix = new MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, qrWidth, qrHeight, hints);
         } catch (WriterException e) {
             e.printStackTrace();
         }
@@ -64,12 +64,13 @@ public class QRCodeUtil {
 
     /**
      * 对已经生成好的二维码设置logo
-     * @param source 二维码
-     * @param logo logo图片
-     * @param logoWidth logo宽度
+     *
+     * @param source     二维码
+     * @param logo       logo图片
+     * @param logoWidth  logo宽度
      * @param logoHeight logo高度
      */
-    public static void insertLogoImage(BufferedImage source,Image logo,int logoWidth,int logoHeight){
+    public static void insertLogoImage(BufferedImage source, Image logo, int logoWidth, int logoHeight) {
         Graphics2D graph = source.createGraphics();
         int qrWidth = source.getWidth();
         int qrHeight = source.getHeight();
@@ -84,12 +85,13 @@ public class QRCodeUtil {
 
     /**
      * 缩小logo图片
+     *
      * @param logoPath
      * @param logoWidth
      * @param logoHeight
      * @return
      */
-    public static Image compressLogo(String logoPath, int logoWidth, int logoHeight){
+    public static Image compressLogo(String logoPath, int logoWidth, int logoHeight) {
         File file = new File(logoPath);
         if (!file.exists()) {
             System.err.println("" + logoPath + "   该文件不存在！");
@@ -119,17 +121,18 @@ public class QRCodeUtil {
 
     /**
      * 增加底部的说明文字
+     *
      * @param source 二维码
-     * @param text 说明内容
+     * @param text   说明内容
      * @param step
      */
-    public static BufferedImage addBottomFont(BufferedImage source, String text,int step) {
+    public static BufferedImage addBottomFont(BufferedImage source, String text, int step) {
 
         int qrWidth = source.getWidth();
-        System.out.println("二维码的宽度"+qrWidth);
+        System.out.println("二维码的宽度" + qrWidth);
         int qrHeight = source.getHeight();
-        System.out.println("二维码的高度"+qrHeight);
-        BufferedImage textImage = textToImage(text, qrWidth, 20,16);
+        System.out.println("二维码的高度" + qrHeight);
+        BufferedImage textImage = textToImage(text, qrWidth, 20, 16);
         Graphics2D graph = source.createGraphics();
         //开启文字抗锯齿
         graph.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -140,20 +143,21 @@ public class QRCodeUtil {
         Image src = textImage;
         graph.drawImage(src, 0, qrHeight - (20 * step) - 10, width, height, null);
         graph.dispose();
-        return  source;
+        return source;
     }
 
     /**
      * 将文明说明增加到二维码上
-     * @param str       文字
-     * @param width     宽
-     * @param height    高
+     *
+     * @param str      文字
+     * @param width    宽
+     * @param height   高
      * @param fontSize 字体大小
      * @return
      */
-    public static BufferedImage textToImage(String str, int width, int height,int fontSize) {
-        BufferedImage textImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2 = (Graphics2D)textImage.getGraphics();
+    public static BufferedImage textToImage(String str, int width, int height, int fontSize) {
+        BufferedImage textImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = (Graphics2D) textImage.getGraphics();
         //开启文字抗锯齿
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setBackground(Color.WHITE);
@@ -166,12 +170,13 @@ public class QRCodeUtil {
         FontMetrics fontMetrics = FontDesignMetrics.getMetrics(font);
         float offset = (width - fontMetrics.stringWidth(str)) / 2;
         float y = (height + lineMetrics.getAscent() - lineMetrics.getDescent() - lineMetrics.getLeading()) / 2;
-        g2.drawString(str, (int)offset, (int)y);
+        g2.drawString(str, (int) offset, (int) y);
         return textImage;
     }
 
     /**
      * 顶部增加说明文字
+     *
      * @param source
      * @param text
      */
@@ -179,7 +184,7 @@ public class QRCodeUtil {
         int qrWidth = source.getWidth();
         int qrHeight = source.getHeight();
 
-        BufferedImage textImage = textToImage(text, qrWidth, 10,10);
+        BufferedImage textImage = textToImage(text, qrWidth, 10, 10);
         Graphics2D graph = source.createGraphics();
         //开启文字抗锯齿
         graph.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -194,15 +199,16 @@ public class QRCodeUtil {
 
     /**
      * 生成二维码图片
-     * @param charSet 二维码编码方式
-     * @param content 内容
-     * @param qrWidth 宽度
-     * @param qrHeight 长度
+     *
+     * @param charSet    二维码编码方式
+     * @param content    内容
+     * @param qrWidth    宽度
+     * @param qrHeight   长度
      * @param formatName jpg等图片格式
-     * @param imgPath 二维码存放路径
+     * @param imgPath    二维码存放路径
      */
-    public static void encode(String charSet,String content,int qrWidth,int qrHeight,String formatName,String imgPath){
-        BufferedImage image = QRCodeUtil.createImage(charSet,content,qrWidth,qrHeight);
+    public static void encode(String charSet, String content, int qrWidth, int qrHeight, String formatName, String imgPath) {
+        BufferedImage image = QRCodeUtil.createImage(charSet, content, qrWidth, qrHeight);
         try {
             ImageIO.write(image, formatName, new File(imgPath));
         } catch (IOException e) {
@@ -212,18 +218,19 @@ public class QRCodeUtil {
 
     /**
      * 生成二维码图片流
-     * @param charSet 二维码编码方式
-     * @param content 内容
-     * @param qrWidth 宽度
+     *
+     * @param charSet  二维码编码方式
+     * @param content  内容
+     * @param qrWidth  宽度
      * @param qrHeight 长度
      * @return
      */
-    public static BufferedImage encode(String charSet,String content,int qrWidth,int qrHeight) {
-        BufferedImage image = QRCodeUtil.createImage(charSet,content,qrWidth,qrHeight);
+    public static BufferedImage encode(String charSet, String content, int qrWidth, int qrHeight) {
+        BufferedImage image = QRCodeUtil.createImage(charSet, content, qrWidth, qrHeight);
         return image;
     }
 
-    public static void encode( BufferedImage image,String formatName,String imgPath){
+    public static void encode(BufferedImage image, String formatName, String imgPath) {
         try {
 
             ImageIO.write(image, formatName, new File(imgPath));
