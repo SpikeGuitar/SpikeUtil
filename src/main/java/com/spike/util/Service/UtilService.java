@@ -17,11 +17,15 @@ public interface UtilService {
 
     List<Person> findAll();
 
-    public Map<String, Object> getTreeMap(List<Map<String, Object>> list);
+    Map<String, Object> getTreeMap(List<Map<String, Object>> list);
 
     void updateDDL(String sql);
 
     List<Map<String, Object>> getUpdateExcel(MultipartFile file);
 
+    void fileDownload(String path, HttpServletResponse response) throws Exception;
+
     List<String> generalImport(String schemaCode, MultipartFile file, String userId, String schemeNo, String remarkNo, String type, String informationType);
+
+    Map<String, Object> getWebQR(Map<String, Object> map);
 }

@@ -16,6 +16,13 @@ public enum FieldEnum {
     APPROVAL("approval","approval"),
     UPDATE(" UPDATE ","UPDATE"),
     WHERE(" WHERE ","UPDATE"),
+    PATH("path","文件地址"),
+    IMG_PATH("imagePath","图片地址"),
+    HTTP("http://","http请求头"),
+    QR_CODE_MSG("QRCodeMsgName","二维码显示信息"),
+    QR_CODE_NAME("QRCodeName","二维码名称"),
+    URL("URL","地址"),
+    DIR("DIR","目录"),
     SCHEMA_CODE("schemaCode","schemaCode");
 
     FieldEnum(String code, String desc) {

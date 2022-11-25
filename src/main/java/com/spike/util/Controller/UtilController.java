@@ -1,8 +1,7 @@
 package com.spike.util.Controller;
 
-import com.alibaba.fastjson.JSON;
+import com.spike.util.Enum.FieldEnum;
 import com.spike.util.Service.UtilService;
-import com.spike.util.Util.QRCodeUtil;
 import com.spike.util.UtilClass.ResponseResult;
 import com.spike.util.entry.Person;
 import io.swagger.annotations.ApiOperation;
@@ -16,14 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -255,40 +252,61 @@ public class UtilController {
         return this.getResponseResult(msgList, SUCCESS);
     }
 
+    @ApiOperation("fileDownload")
+    @GetMapping("/fileDownload")
+    public void fileDownload(@RequestParam(value = "path") String path, HttpServletResponse response) throws Exception {
+        utilService.fileDownload(path, response);
+    }
+
     /**
+     * getQRCode
      *
      * @param map
      * @return
      */
+    @ApiOperation("getQRCode")
     @PostMapping("/getQRCode")
-    public ResponseResult<Object> getWebQR(@RequestBody Map<String,Object> map) {
-        String QRCodeMsgName = map.get("QRCodeMsgName").toString();
-        String QRCodeName = map.get("QRCodeName").toString();
-        String url = map.get("URL").toString();
-        String dir = map.get("DIR").toString();
-        log.info("map：{}", JSON.toJSONString(map));
-        BufferedImage image = QRCodeUtil.createImage("utf-8", url, 300, 300);
-        QRCodeUtil.addUpFont(image, QRCodeMsgName);
-        Date nowDate = new Date();
-        String path = dir+File.separator+QRCodeName;
-        if(map.get("isRandom")!=null){
-            path+=nowDate.getTime();
-        }
-        path+=".jpg";
-        log.info("文件路径：{}",path);
-        try {
-            File file = new File(path);
-            if (!file.isDirectory()) {
-                file.mkdirs();
-            }
-            ImageIO.write(image, "JPEG", file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        map.clear();
-        map.put("msg", "获取二维码成功");
-        map.put("imagePath", path);
-        return this.getResponseResult(map, SUCCESS);
+    public ResponseResult<Object> getWebQR(@RequestBody Map<String, Object> map){
+        Map<String, Object> resultMap = utilService.getWebQR(map);
+        return this.getResponseResult(resultMap, SUCCESS);
     }
+
+
+    /**
+     * getQRCodePicture
+     *
+     * @param map
+     * @return
+     */
+    @ApiOperation("getQRCodePicture")
+    @PostMapping("/getQRCodePicture")
+    public ResponseResult<Object> getQRCodePicture(@RequestBody Map<String, Object> map, HttpServletResponse response) throws Exception {
+        String url = map.get(FieldEnum.QR_CODE_NAME.getCode()).toString();
+        String fileName = URLEncoder.encode(url, "UTF-8");
+        response.addHeader("Content-Disposition", "attachment;filename=" + fileName);
+        Map<String, Object> resultMap = utilService.getWebQR(map);
+        if (resultMap.get(FieldEnum.IMG_PATH.getCode()) != null) {
+            String path = resultMap.get(FieldEnum.IMG_PATH.getCode()).toString();
+            utilService.fileDownload(path, response);
+            log.info(SUCCESS);
+            return this.getResponseResult(resultMap, SUCCESS);
+        } else {
+            log.info("图片地址丢失！");
+            return this.getResponseResult(null, "图片地址丢失！");
+        }
+    }
+
+    @ApiOperation(value = "通用导入接口", httpMethod = "POST")
+    @PostMapping("/upFile")
+    public ResponseResult<Object> upFile(@RequestParam("URL") String URL, @RequestParam("file") MultipartFile file) throws IOException {
+        File fileDir = new File(URL);
+        if (!fileDir.isDirectory()) {
+            fileDir.mkdirs();
+        }
+        String fileName =URL+File.separator+file.getOriginalFilename();
+        file.transferTo(new File(fileName));
+        return this.getResponseResult(null, SUCCESS);
+    }
+
 
 }

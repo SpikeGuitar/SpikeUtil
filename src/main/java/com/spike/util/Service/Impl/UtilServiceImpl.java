@@ -1,6 +1,9 @@
 package com.spike.util.Service.Impl;
 
+import com.alibaba.fastjson.JSON;
+import com.spike.util.Enum.FieldEnum;
 import com.spike.util.Service.UtilService;
+import com.spike.util.Util.QRCodeUtil;
 import com.spike.util.UtilClass.ExcelUtil;
 import com.spike.util.entry.Person;
 import com.spike.util.ldapConfig.SsldapContextSource;
@@ -21,13 +24,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.imageio.ImageIO;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
@@ -75,6 +82,12 @@ public class UtilServiceImpl implements UtilService {
 
     @Value("${spring.ldap.base:}")
     private String LDAP_BASE;
+
+    @Value("${server.port:}")
+    private String PORT;
+
+    @Value("${server.servlet.context-path:}")
+    private String CONTEXT_PATH;
 
     @Resource
     private JavaMailSender javaMailSender;
@@ -125,11 +138,11 @@ public class UtilServiceImpl implements UtilService {
             col = 0;
             for (String fileName : tableCode) {
                 String value = dataMap.get(fileName) != null ? dataMap.get(fileName).toString() : "";
-                if(!value.isEmpty()&& Pattern.matches("[-]?[0-9]*[.]?[0-9]*",value)){
+                if (!value.isEmpty() && Pattern.matches("[-]?[0-9]*[.]?[0-9]*", value)) {
                     row.createCell(col).setCellType(CellType.NUMERIC);
-                    double dobValue= Double.valueOf(value);
+                    double dobValue = Double.valueOf(value);
                     row.createCell(col++).setCellValue(dobValue);
-                }else {
+                } else {
                     row.createCell(col).setCellType(CellType.STRING);
                     row.createCell(col++).setCellValue(value);
                 }
@@ -241,7 +254,7 @@ public class UtilServiceImpl implements UtilService {
                 String fileName = map.get("fileName").toString();
                 if (mkdir.equals("3")) {
                     String projectName = "自定义目录";
-                    fileName =projectName+ File.separator +map.get("fileType").toString() + File.separator + map.get("fileName").toString();
+                    fileName = projectName + File.separator + map.get("fileType").toString() + File.separator + map.get("fileName").toString();
                 }
                 if (mkdir.equals("2")) {
                     fileName = map.get("fileType").toString() + File.separator + map.get("fileName").toString();
@@ -278,6 +291,7 @@ public class UtilServiceImpl implements UtilService {
 
     /**
      * List数组 生成树形结构
+     *
      * @param list
      * @return
      */
@@ -305,7 +319,7 @@ public class UtilServiceImpl implements UtilService {
         jdbcTemplate.execute(sql);
     }
 
-    public Map<String, Object> getTreeMap(List<Map<String, Object>> mapList,Map<String, Object> resultMap){
+    public Map<String, Object> getTreeMap(List<Map<String, Object>> mapList, Map<String, Object> resultMap) {
         List<String> idList = new ArrayList<>();
         for (Map map : mapList) {
             //获取父id
@@ -356,8 +370,17 @@ public class UtilServiceImpl implements UtilService {
     }
 
     @Override
-    public List<Map<String, Object>> getUpdateExcel(MultipartFile file){
+    public List<Map<String, Object>> getUpdateExcel(MultipartFile file) {
         return updateExcel(file);
+    }
+
+    @Override
+    public void fileDownload(String path, HttpServletResponse response) throws Exception {
+        File file = new File(path);
+        InputStream inputStream = new FileInputStream(file);
+        OutputStream out = response.getOutputStream();
+        ByteArrayOutputStream readOut = reader(inputStream);
+        out.write(readOut.toByteArray());
     }
 
     @Override
@@ -391,8 +414,39 @@ public class UtilServiceImpl implements UtilService {
         return msgList;
     }
 
+    @Override
+    public Map<String, Object> getWebQR(Map<String, Object> map) {
+        String QRCodeMsgName = map.get(FieldEnum.QR_CODE_MSG.getCode()).toString();
+        String QRCodeName = map.get(FieldEnum.QR_CODE_NAME.getCode()).toString();
+        String url = map.get(FieldEnum.URL.getCode()).toString();
+        String dir = map.get(FieldEnum.DIR.getCode()).toString();
+        log.info("map：{}", JSON.toJSONString(map));
+        BufferedImage image = QRCodeUtil.createImage("utf-8", url, 300, 300);
+        QRCodeUtil.addUpFont(image, QRCodeMsgName);
+        Date nowDate = new Date();
+        String path = dir+File.separator+QRCodeName;
+        if(map.get("isRandom")!=null){
+            path+=nowDate.getTime();
+        }
+        log.info("文件路径：{}",path);
+        try {
+            File file = new File(path);
+            if (!file.isDirectory()) {
+                file.mkdirs();
+            }
+            ImageIO.write(image, "JPEG", file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        map.clear();
+        map.put("msg", "获取二维码成功");
+        map.put(FieldEnum.IMG_PATH.getCode(), path);
+        return map;
+    }
+
     /**
      * 导入校验列子
+     *
      * @param err
      * @param map
      * @param saveList
