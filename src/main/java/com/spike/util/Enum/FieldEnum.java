@@ -17,6 +17,8 @@ public enum FieldEnum {
     UPDATE(" UPDATE ","UPDATE"),
     WHERE(" WHERE ","UPDATE"),
     PATH("path","文件地址"),
+    DATE_FORMAT("[0-9]{4}[-][0-9]{2}[-][0-9]{2}","日期格式正则表达式"),
+    SPECIAL_FORMAT("([0][.][0-9]+|[1-9][0-9]*|[1-9][0-9]*[.][0-9]*)\\*([0][.][0-9]+|[1-9][0-9]*|[1-9][0-9]*[.][0-9]*)\\*([0][.][0-9]+|[1-9][0-9]*|[1-9][0-9]*[.][0-9]*)","特殊格式正则表达式XX*XX*XX格式"),
     IMG_PATH("imagePath","图片地址"),
     HTTP("http://","http请求头"),
     QR_CODE_MSG("QRCodeMsgName","二维码显示信息"),
