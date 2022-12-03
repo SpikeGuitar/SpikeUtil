@@ -5,8 +5,11 @@ import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.NumberToTextConverter;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -189,7 +192,10 @@ public class ExcelUtil {
      * @param cell
      * @return
      */
-    public static String getValue(Cell cell) {
+    public String getValue(Cell cell) {
+        if (cell == null) {
+            return null;
+        }
         if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.BOOLEAN) {
             return String.valueOf(cell.getBooleanCellValue());
         } else if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.NUMERIC) {
@@ -199,13 +205,13 @@ public class ExcelUtil {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                 value = sdf.format(d);
             } else {
-                double temp = cell.getNumericCellValue();
-                //value = new BigDecimal(temp).toString();
-                value = String.valueOf(temp);
+                value =((XSSFCell) cell).getRawValue();
             }
             return value;
         } else if (cell.getCellTypeEnum() == org.apache.poi.ss.usermodel.CellType.STRING) {
             return String.valueOf(cell.getStringCellValue());
+        } else if (cell.getCellTypeEnum() == CellType.FORMULA) {
+            return NumberToTextConverter.toText(cell.getNumericCellValue());
         } else {
             return String.valueOf(cell.getStringCellValue());
         }
