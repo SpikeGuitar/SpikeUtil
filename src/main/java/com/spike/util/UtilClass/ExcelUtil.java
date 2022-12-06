@@ -192,7 +192,7 @@ public class ExcelUtil {
      * @param cell
      * @return
      */
-    public String getValue(Cell cell) {
+    public static String getValue(Cell cell) {
         if (cell == null) {
             return null;
         }
