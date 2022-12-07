@@ -5,6 +5,7 @@ import com.spike.util.Enum.FieldEnum;
 import com.spike.util.Service.UtilService;
 import com.spike.util.Util.QRCodeUtil;
 import com.spike.util.UtilClass.ExcelUtil;
+import com.spike.util.UtilClass.ResponseResult;
 import com.spike.util.entry.Person;
 import com.spike.util.ldapConfig.SsldapContextSource;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +48,9 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.spike.util.Controller.UtilController.ERR_CODE;
+import static com.spike.util.Controller.UtilController.SUCCESS;
+import static com.spike.util.Enum.FieldEnum.SCHEMA_CODE;
 import static com.spike.util.UtilClass.ExcelUtil.batchCheckRegular;
 import static com.spike.util.UtilClass.ExcelUtil.checkEnum;
 import static com.spike.util.UtilClass.ExcelUtil.checkField;
@@ -97,6 +101,8 @@ public class UtilServiceImpl implements UtilService {
     //Positive integer regular expression
     public static final String SCHEME_NO = "schemeNo";
 
+    public static final String SELECT = FieldEnum.SELECT.getCode();
+
     public static final String REMARK_NO = "remarkNo";
 
     //check integer
@@ -106,6 +112,18 @@ public class UtilServiceImpl implements UtilService {
 
     //Integer greater than or equal to 0
     public static final String INTEGER_BIG_THAN_ZERO = "[0-9]*([.]0)?";
+
+
+    /**
+     * 获取成功响应.
+     */
+    protected <T> ResponseResult<T> getOkResponseResult(T t, String errMsg) {
+        return getErrResponseResult(t, ERR_CODE, errMsg);
+    }
+
+    protected <T> ResponseResult<T> getErrResponseResult(T t, Long errCode, String errMsg) {
+        return ResponseResult.<T>builder().data(t).errcode(errCode).errmsg(errMsg).build();
+    }
 
     public void exportExcel(String execlTempleName, Map<String, Object> map, HttpServletResponse response) throws Exception {
         ExcelUtil.ExcelTemplate excelTemplate = ExcelUtil.ExcelTemplate.init(execlTempleName + ".xlsx");
@@ -596,5 +614,43 @@ public class UtilServiceImpl implements UtilService {
         // 下载路径
         String fullPath =getDownloadUrl(newFile.getAbsoluteFile().toString());
         return fullPath;
+    }
+
+    @Override
+    public ResponseResult<Object> userIsRead(List<Map<String, Object>> mapList, String userId) {
+        for (Map<String, Object> map : mapList) {
+            if (map.get(SCHEMA_CODE.getCode()) == null || map.get("subTable") == null || map.get(REMARK_NO) == null || map.get("queryField") == null) {
+                return this.getErrResponseResult(null, ERR_CODE, "缺失参数!");
+            }
+            String mainTableName = "mainTableName";
+            String remarkNo = map.get(REMARK_NO).toString();
+            String queryField = map.get("queryField").toString();
+            String subTableName = "subTableName";
+            String updateFieldSql = "a.readMembers = CONCAT(left(a.readMembers,CHAR_LENGTH(a.readMembers) - 1),',{\"id\":\"" + userId + "\",\"type\":3}]')";
+            String updateSql = "UPDATE " + subTableName + " a LEFT JOIN " + mainTableName + " b on a.parentId = b.id set " + updateFieldSql + " where b." + queryField + "= ? ";
+            jdbcTemplate.update(updateSql, remarkNo);
+        }
+        return this.getOkResponseResult(null, SUCCESS);
+    }
+
+    @Override
+    public ResponseResult<Object> userIsReadState(List<Map<String, Object>> mapList, String userId) {
+        for (Map<String, Object> map : mapList) {
+            if (map.get(SCHEMA_CODE.getCode()) == null || map.get("subTable") == null || map.get(REMARK_NO) == null || map.get("queryField") == null) {
+                return this.getErrResponseResult(null, ERR_CODE, "缺失参数!");
+            }
+            String mainTableName = "mainTableName";
+            String remarkNo = map.get(REMARK_NO).toString();
+            String queryField = map.get("queryField").toString();
+            String subTableName = "subTableName";
+            String sumSql = SELECT + " a.id from " + subTableName + " a LEFT JOIN " + mainTableName + " b on a.parentId = b.id  where b." + queryField + "= ? ";
+            List<Map<String, Object>> sumList = jdbcTemplate.queryForList(sumSql, remarkNo);
+            String countSql = SELECT + " a.id from " + subTableName + " a LEFT JOIN " + mainTableName + " b on a.parentId = b.id  where b." + queryField + "= ? and a.readMembers like ? ";
+            List<Map<String, Object>> countList = jdbcTemplate.queryForList(countSql, remarkNo, "%" + userId + "%");
+            if (sumList.size() > countList.size()) {
+                return this.getOkResponseResult(Boolean.FALSE, SUCCESS);
+            }
+        }
+        return this.getOkResponseResult(Boolean.TRUE, SUCCESS);
     }
 }

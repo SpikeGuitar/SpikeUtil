@@ -32,6 +32,8 @@ public class UtilController {
 
     public static final String SUCCESS = "操作成功!";
 
+    public static final Long ERR_CODE = -1l;
+
     @Resource
     private UtilService utilService;
 
@@ -339,5 +341,25 @@ public class UtilController {
         Map<String, Object> resultMap = utilService.getWebQR(map);
         String path = resultMap.get(FieldEnum.IMG_PATH.getCode()).toString();
         utilService.fileDownload(path, response);
+    }
+
+    @ApiOperation(value = "全部已读接口接口", httpMethod = "POST")
+    @PostMapping("/userIsRead")
+    public ResponseResult<Object> userIsRead(@RequestBody List<Map<String, Object>> mapList) {
+        if(mapList.isEmpty()){
+            return this.getErrResponseResult(null, ERR_CODE, "参数为空!");
+        }else {
+            return utilService.userIsRead(mapList,"getUserId()");
+        }
+    }
+
+    @ApiOperation(value = "全部已读状态", httpMethod = "POST")
+    @PostMapping("/userIsReadState")
+    public ResponseResult<Object> userIsReadState(@RequestBody List<Map<String, Object>> mapList) {
+        if(mapList.isEmpty()){
+            return this.getErrResponseResult(null, ERR_CODE, "参数为空!");
+        }else {
+            return utilService.userIsReadState(mapList,"getUserId()");
+        }
     }
 }

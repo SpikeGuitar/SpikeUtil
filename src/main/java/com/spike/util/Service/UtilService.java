@@ -1,5 +1,6 @@
 package com.spike.util.Service;
 
+import com.spike.util.UtilClass.ResponseResult;
 import com.spike.util.entry.Person;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,4 +35,8 @@ public interface UtilService {
     String getDownloadUrl(String toString) throws UnknownHostException;
 
     String upFile(String url, MultipartFile file) throws IOException;
+
+    ResponseResult<Object> userIsRead(List<Map<String, Object>> mapList, String userId);
+
+    ResponseResult<Object> userIsReadState(List<Map<String, Object>> mapList,String userId);
 }
