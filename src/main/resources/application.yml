@@ -7,7 +7,7 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://123.60.38.54:3306/mysql?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://43.137.43.142:3306/mysql?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: 656803
     hikari:
@@ -17,7 +17,7 @@ spring:
   lvBaseData:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL
-    url: jdbc:mysql://123.60.38.54:3306/cloudpivot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false   # MySQL
+    url: jdbc:mysql://43.137.43.142:3306/cloudpivot?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=false   # MySQL
     username: root
     password: 123456
   ldap:
@@ -42,7 +42,7 @@ spring:
               fallback: false
   #redis
   redis:
-    host: 123.60.38.54
+    host: 43.137.43.142
     port: 6379
     timeout: 20000
     pool:
